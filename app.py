@@ -61,5 +61,14 @@ def update_task(task_id):
     return jsonify({'message': 'task updated successfully'}), 200
 
 
+@app.route('/todos/<task_id>', methods=['DELETE'])
+def delete_task(task_id):
+    task_object_id = ObjectId(task_id)
+
+    tasks_collection.delete_one({'_id': task_object_id})
+
+    return jsonify({'message': 'task deleted successfully'}), 200
+
+
 if __name__ == '__main__':
     app.run()
