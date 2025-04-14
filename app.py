@@ -37,7 +37,6 @@ users_collection = database.get_collection('users')
 tasks_collection = database.get_collection('tasks')
 
 
-
 def token_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
@@ -134,13 +133,12 @@ def create_task(current_user):
 
 
 @app.route('/todos', methods=['GET'])
-def get_tasks():
-    tasks = tasks_collection.find()
+@token_required
+def get_tasks(current_user):
+    user_object_id = ObjectId(current_user['_id'])
 
-    tasks_list = [
-        {**task, '_id': str(task['_id'])}
-        for task in tasks
-    ]
+    tasks = tasks_collection.find({'user_id': user_object_id})
+    tasks_list = [{**task, '_id': str(task['_id']), 'user_id': str(task['user_id'])} for task in tasks]
 
     return jsonify({
         'message': 'tasks retrieved successfully',
