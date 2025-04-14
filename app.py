@@ -162,8 +162,13 @@ def update_task(current_user, task_id):
 
 
 @app.route('/todos/<task_id>', methods=['DELETE'])
-def delete_task(task_id):
+@token_required
+def delete_task(current_user, task_id):
     task_object_id = ObjectId(task_id)
+
+    task = tasks_collection.find_one({'_id': task_object_id})
+    if task['user_id'] != ObjectId(current_user['_id']):
+        return jsonify({'message': 'unauthorized to delete this task'}), 403
 
     tasks_collection.delete_one({'_id': task_object_id})
 
