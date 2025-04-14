@@ -1,7 +1,11 @@
+import os
+from datetime import datetime, timezone, timedelta
 from typing import TypedDict
 
 import bcrypt
+import jwt
 from bson import ObjectId
+from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
 
@@ -17,6 +21,11 @@ class Task(TypedDict):
 
 
 app = Flask(__name__)
+
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY')
+JWT_ALGORITHM = os.getenv('JWT_ALGORITHM')
+TOKEN_EXPIRE_HOURS = os.getenv('TOKEN_EXPIRE_HOURS')
 
 uri = 'mongodb://localhost:27017/todo'
 client = MongoClient(uri)
@@ -51,6 +60,15 @@ def sign_up():
     return jsonify({'message': 'user created successfully'}), 201
 
 
+def generate_token_payload(user_id):
+    token_payload = {
+        'user_id': user_id,
+        'exp': datetime.now(tz=timezone.utc) + timedelta(hours=float(TOKEN_EXPIRE_HOURS))
+    }
+    token = jwt.encode(token_payload, SECRET_KEY, JWT_ALGORITHM)
+    return token
+
+
 @app.route('/login', methods=['POST'])
 def login():
     user_data = request.json
@@ -67,7 +85,8 @@ def login():
     is_valid = bcrypt.checkpw(password_bytes, hashed_password_bytes)
 
     if is_valid:
-        return jsonify({'message': 'login successful'}), 200
+        token = generate_token_payload(str(user['_id']))
+        return jsonify({'token': token}), 200
     return jsonify({'message': 'invalid password'}), 401
 
 
