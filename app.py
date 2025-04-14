@@ -147,10 +147,15 @@ def get_tasks(current_user):
 
 
 @app.route('/todos/<task_id>', methods=['PUT'])
-def update_task(task_id):
+@token_required
+def update_task(current_user, task_id):
     task_object_id = ObjectId(task_id)
-    updated_task_data = request.json
 
+    task = tasks_collection.find_one({'_id': task_object_id})
+    if task['user_id'] != ObjectId(current_user['_id']):
+        return jsonify({'message': 'unauthorized to update this task'}), 403
+
+    updated_task_data = request.json
     tasks_collection.update_one({'_id': task_object_id}, {'$set': updated_task_data})
 
     return jsonify({'message': 'task updated successfully'}), 200
