@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+from bson import ObjectId
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
 
@@ -48,6 +49,16 @@ def get_tasks():
         'message': 'tasks retrieved successfully',
         'tasks': tasks_list
     }), 200
+
+
+@app.route('/todos/<task_id>', methods=['PUT'])
+def update_task(task_id):
+    task_object_id = ObjectId(task_id)
+    updated_task_data = request.json
+
+    tasks_collection.update_one({'_id': task_object_id}, {'$set': updated_task_data})
+
+    return jsonify({'message': 'task updated successfully'}), 200
 
 
 if __name__ == '__main__':
