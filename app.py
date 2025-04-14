@@ -1,5 +1,6 @@
 from typing import TypedDict
 
+import bcrypt
 from bson import ObjectId
 from flask import Flask, jsonify, request
 from pymongo import MongoClient
@@ -30,13 +31,21 @@ def status():
     return jsonify({'message': 'ok'}), 200
 
 
+def hash_password(password):
+    password_bytes = password.encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+    return hashed_password
+
+
 @app.route('/signup', methods=['POST'])
 def sign_up():
     user_data = request.json
+    hashed_password = hash_password(user_data['password'])
     users_collection.insert_one(
         User(
             username=user_data['username'],
-            password=user_data['password']
+            password=hashed_password
         )
     )
     return jsonify({'message': 'user created successfully'}), 201
