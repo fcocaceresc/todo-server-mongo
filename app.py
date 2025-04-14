@@ -35,5 +35,20 @@ def create_task():
     return jsonify({'message': 'task created successfully'}), 201
 
 
+@app.route('/todos', methods=['GET'])
+def get_tasks():
+    tasks = tasks_collection.find()
+
+    tasks_list = [
+        {**task, '_id': str(task['_id'])}
+        for task in tasks
+    ]
+
+    return jsonify({
+        'message': 'tasks retrieved successfully',
+        'tasks': tasks_list
+    }), 200
+
+
 if __name__ == '__main__':
     app.run()
