@@ -5,6 +5,11 @@ from flask import Flask, jsonify, request
 from pymongo import MongoClient
 
 
+class User(TypedDict):
+    username: str
+    password: str
+
+
 class Task(TypedDict):
     title: str
     description: str
@@ -16,12 +21,25 @@ uri = 'mongodb://localhost:27017/todo'
 client = MongoClient(uri)
 
 database = client.get_database('todo')
+users_collection = database.get_collection('users')
 tasks_collection = database.get_collection('tasks')
 
 
 @app.route('/status', methods=['GET'])
 def status():
     return jsonify({'message': 'ok'}), 200
+
+
+@app.route('/signup', methods=['POST'])
+def sign_up():
+    user_data = request.json
+    users_collection.insert_one(
+        User(
+            username=user_data['username'],
+            password=user_data['password']
+        )
+    )
+    return jsonify({'message': 'user created successfully'}), 201
 
 
 @app.route('/todos', methods=['POST'])
