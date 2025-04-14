@@ -51,6 +51,26 @@ def sign_up():
     return jsonify({'message': 'user created successfully'}), 201
 
 
+@app.route('/login', methods=['POST'])
+def login():
+    user_data = request.json
+
+    user = users_collection.find_one({'username': user_data['username']})
+    if not user:
+        return jsonify({'message': 'invalid username'}), 401
+
+    stored_password_hash = user['password']
+
+    password_bytes = user_data['password'].encode('utf-8')
+    hashed_password_bytes = stored_password_hash.encode('utf-8')
+
+    is_valid = bcrypt.checkpw(password_bytes, hashed_password_bytes)
+
+    if is_valid:
+        return jsonify({'message': 'login successful'}), 200
+    return jsonify({'message': 'invalid password'}), 401
+
+
 @app.route('/todos', methods=['POST'])
 def create_task():
     task_data = request.json
